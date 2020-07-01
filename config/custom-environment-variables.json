@@ -1,0 +1,7 @@
+{
+  "jwtPrivateKey": "LivesMatter_jwtPrivateKey",
+  "db": {
+    "password": "MONGO_PASSWORD",
+    "schema": "LivesMatter_db"
+  }
+}
