@@ -4,15 +4,13 @@ const userTestRouter = express.Router();
 const bcrypt = require("bcrypt");
 const _ = require("lodash");
 
-userTestRouter.get("/", async (req, res) => {
+userTestRouter.get("/ip", async (req, res) => {
+  //working
+  console.log("I've been probed");
   var ip = req.ip;
-  console.log(ip, "this is the ip");
-  const users = await User.find();
-  if (users) {
-    return res.send(users);
-  }
-  res.send("Connection isn't working");
+  res.send(ip);
 });
+//============================================================
 userTestRouter.post("/", async (req, res) => {
   const valid = validateUser(req.body);
   if (valid.error) {
