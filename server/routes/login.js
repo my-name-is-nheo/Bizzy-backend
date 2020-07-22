@@ -1,10 +1,12 @@
 const express = require("express");
-const { Login, validateUser } = require("../model/login");
-const loginRouter = express.Router();
+const { required, date } = require("@hapi/joi");
 const bcrypt = require("bcrypt");
 const _ = require("lodash");
+const { BannedItems } = require("../model/bannedIps");
+const { TokenMaker } = require("../model/tokenMaker");
+const { validateUser } = require("../model/login");
 const { NewUser } = require("../model/newUser");
-const { required, date } = require("@hapi/joi");
+const loginRouter = express.Router();
 
 const { Ban } = require("../model/ipObject");
 const ipObject = require("../model/ipObject");
@@ -16,96 +18,130 @@ loginRouter.get("/", async (req, res) => {
 //============================================================
 loginRouter.post("/", async (req, res) => {
   try {
-    // const valid = validateUser(req.body);
-    // if (valid.error) {
-    //   console.log(valid.error.details[0].message);
-    //   return res.status(400).send(valid.error.details[0].message);
-    // }
-    // const checkExisting = await NewUser.find();
-    // let matched = false;
-    // let id;
-
-    // for (var i = 0; i < checkExisting.length; i++) {
-    //   if (checkExisting[i].email === req.body.email) {
-    //     const validPassword = await bcrypt.compare(
-    //       req.body.password,
-    //       checkExisting[i].password
-    //     );
-    //     if (validPassword) {
-    //       matched = true;
-    //       id = checkExisting[i]._id;
-    //     }
-    //   }
-    // }
-    // if (!matched) {
-    //   return res.status(400).send("Either password or email is incorrect.");
-    // }
+    const valid = validateUser(req.body);
+    if (valid.error) {
+      console.log(valid.error.details[0].message);
+      return res.status(400).send(valid.error.details[0].message);
+    }
     var ipAddress = req.ip;
-    const ip = convertToStringNumber(ipAddress);
+    const ipToCompare = convertToStringNumber(ipAddress);
+    let notAllowed = false;
+    const checkIfBanned = await BannedItems.find();
 
-    // 192.2983;
-    // ("192dot");
-    var banned = new Ban({
-      ips: { [ip]: [new Date(Date.now())] },
+    if (checkIfBanned.length !== 0) {
+      for (var i = 0; i < checkIfBanned[0].banned.length; i++) {
+        if (checkIfBanned[0].banned[i] === ipToCompare) {
+          console.log("making it to not allowed");
+          notAllowed = true;
+        }
+      }
+      if (notAllowed) {
+        res.status(400).send("banned");
+      }
+    }
+    const ipObject = await Ban.find();
+    if (ipObject.length === 0) {
+      var banned = new Ban({
+        ips: { [ipToCompare]: [new Date(Date.now())] },
+      });
+      await banned.save();
+      return res.send(banned);
+    }
+    console.log(" This dat sexii bodii 123");
+    const id = ipObject[0]._id;
+
+    for (var key in ipObject[0].ips) {
+      if (key === ipToCompare) {
+        console.log("reached line 49");
+        if (ipObject[0].ips[key].length < 20) {
+          const newArr = [...ipObject[0].ips[key]];
+          newArr.push(new Date(Date.now()));
+          const updated = await Ban.update(
+            { _id: id },
+            {
+              $set: {
+                ips: {
+                  [ipToCompare]: newArr,
+                },
+              },
+            }
+          );
+        } else {
+          const presentTime = new Date(Date.now());
+          const purgedCollection = [];
+          for (var index = 0; index < ipObject[0].ips[key].length; index++) {
+            var times = ipObject[0].ips[key][index];
+            if (presentTime - times < 300000) {
+              purgedCollection.push(times);
+            }
+          }
+
+          const updated = await Ban.update(
+            { _id: id },
+            {
+              $set: {
+                ips: {
+                  [ipToCompare]: purgedCollection,
+                },
+              },
+            }
+          );
+          if (purgedCollection.length >= 20) {
+            const bannedList = await BannedItems.find();
+            console.log(bannedList, " This is bannedItems");
+            if (bannedList.length === 0) {
+              const theBanned = await new BannedItems({
+                banned: [ipToCompare],
+              });
+              theBanned.save();
+              return res.send(theBanned);
+            } else {
+              const updateArr = [...bannedList[0].banned];
+              updateArr.push(ipToCompare);
+              console.log(bannedList[0], " bannedList[0]");
+              console.log(updateArr, " updateArr");
+
+              const updated = await BannedItems.update(
+                { _id: bannedList[0]._id },
+                {
+                  $set: {
+                    banned: updateArr,
+                  },
+                }
+              );
+            }
+          }
+        }
+      }
+    }
+    const checkExisting = await NewUser.find();
+    let matched = false;
+    let matchedId;
+    for (var i = 0; i < checkExisting.length; i++) {
+      if (checkExisting[i].email === req.body.email) {
+        const validPassword = await bcrypt.compare(
+          req.body.password,
+          checkExisting[i].password
+        );
+        if (validPassword) {
+          matched = true;
+          matchedId = checkExisting[i]._id;
+        }
+      }
+    }
+    if (!matched) {
+      return res.status(400).send("Either password or email is incorrect.");
+    }
+    const userDetails = await NewUser.findOne({ email: req.body.email });
+
+    const login = new TokenMaker({
+      email: req.body.email,
+      password: req.body.password,
+      firstName: userDetails.firstName,
+      lastName: userDetails.lastName,
     });
-    await banned.save();
-
-    // const time = new Date(Date.now());
-    // const ipHeck = await Ban.find(); // type array
-    // const id = ipHeck[0]._id;
-    // const bannedIp = ipHeck[0].ips;
-    // for (var key in bannedIp) {
-    //   var presentTime = new Date(Date.now());
-    //   if (key === ip) {
-    //     const ipArray = bannedIp[key];
-    //     if (ipArray.length < 20) {
-    //       ipArray.push(presentTime);
-    //       const updated = await Ban.update(
-    //         { _id: id },
-    //         {
-    //           $set: {
-    //             ips: {
-    //               [key]: ipArray,
-    //             },
-    //           },
-    //         }
-    //       );
-    //     }
-
-    //     // for (var i = 0; i < ipArray.length; i++) {}
-    //   }
-    // }
-
-    /* We need to first create a section in the db for ip addresses.  
-    We'll need to check the ip address against a mongo database of addresses.
-    
-    If there is a record of that address, it needs to see how many times that address has been called in the last
-    five minutes
-
-    {23.454.3789: [timeStamp1, timeStamp2, etc] }
-
-    first we'll see how many in the array
-    add to the array if less than 20
-    if twenty or more
-
-    find current time, and loop through the array.  For each item that is over 5 minutes old,
-    we can delete it from the array.  If after all deletions, array length is still more than 20, 
-    then ban ip.
-    
-    if it's been called more than 20 in five minutes, then it needs to ban this ip address.
-
-    admin profile can unban an ip.
-
-    we'll need a model for the ip object.  It'll be one singular object.
-
-    */
-    // const returningUser = await NewUser.findById(id);
-
-    // const token = returningUser.generateAuthToken();
-    // console.log(token, "this is da toke");
-    // res.header("x-auth-token", token).send("User logged in successfully");
-
-    // console.log("post hit, and reached mongo. Check database");
+    const token = login.generateAuthToken();
+    res.header("x-auth-token", token).send("x auth token sent!");
   } catch (err) {
     console.log(err, "post request not working");
   }
