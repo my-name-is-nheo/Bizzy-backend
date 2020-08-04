@@ -26,6 +26,7 @@ favoriteRouter.post("/", async (req, res) => {
 
   const { city, heartPressed, name } = req.body;
   const existenceCheck = Favorite.findOne;
+
   //   let users = await User.find();
   //   try {
   //     for (var i = 0; i < users.length; i++) {
