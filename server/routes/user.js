@@ -1,5 +1,5 @@
 const express = require("express");
-const { User, validateUser } = require("../model/userTest.js");
+const { NewUser } = require("../model/newUser.js");
 const userTestRouter = express.Router();
 const bcrypt = require("bcrypt");
 const _ = require("lodash");
@@ -9,6 +9,14 @@ userTestRouter.get("/ip", async (req, res) => {
   console.log("I've been probed");
   var ip = req.ip;
   res.send(ip);
+});
+userTestRouter.post("/auth", async (req, res) => {
+  const email = req.body.email;
+  const found = await NewUser.findOne({ email: email });
+  if (found) {
+    return res.send(true);
+  }
+  return res.send(false);
 });
 //============================================================
 userTestRouter.post("/", async (req, res) => {
