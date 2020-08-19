@@ -3,6 +3,7 @@ const { NewUser } = require("../model/newUser.js");
 const userTestRouter = express.Router();
 const bcrypt = require("bcrypt");
 const _ = require("lodash");
+const { Business } = require("../model/business");
 
 userTestRouter.get("/ip", async (req, res) => {
   //working
@@ -18,6 +19,33 @@ userTestRouter.post("/auth", async (req, res) => {
   }
   return res.send(false);
 });
+userTestRouter.post("/testModel", async (req, res) => {
+  try {
+    console.log("OW!");
+    const addBusiness = await new Business(req.body);
+    addBusiness.save();
+    res.send(addBusiness);
+  } catch (error) {
+    console.log(error, "This is the error in the test model.");
+  }
+});
+userTestRouter.put("/testModel", async (req, res) => {
+  try {
+    const id = req.body.id;
+    const fixedName = await Business.update(
+      { _id: id },
+      {
+        $set: {
+          name: req.body.name,
+        },
+      }
+    );
+    res.send(fixedName);
+  } catch (error) {
+    console.log(error, "This is the error in the test model.");
+  }
+});
+
 //============================================================
 userTestRouter.post("/", async (req, res) => {
   const valid = validateUser(req.body);
