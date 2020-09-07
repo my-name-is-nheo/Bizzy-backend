@@ -8,12 +8,25 @@ const businessSchema = new mongoose.Schema({
     minlength: 2,
     maxlength: 500,
   },
+  linkingId: { type: String, minlength: 1, maxlength: 5000 },
+  address_components: { type: Object },
+  formatted_address: { type: String },
+  formatted_phone_number: { type: String },
+  geometry: { type: Object },
+  hasVerified: { type: Boolean },
+  opening_hours: { type: Object },
+  city: { type: String, minlength: 1, maxlength: 5000 },
+  international_phone_number: { type: String },
   online: { type: Boolean },
   ownerName: { type: String },
   hasVerified: { type: Boolean },
+  state: { type: String },
   category: { type: Array },
+  photos: { type: Object },
   rating: { type: Number },
-  reviewArray: { type: Array },
+  reviews: { type: Object },
+  types: { type: Object },
+  website: { type: String },
   photo: { type: Array },
   openingHours: { type: Object },
   favoriteCounts: { type: Number },
@@ -21,6 +34,26 @@ const businessSchema = new mongoose.Schema({
   funding: { type: Object },
   socialMedia: { type: Object },
 });
+
+// {
+//   x "address_components": "object",
+//   x "city": "string",
+//   x "formatted_address": "string",
+//   x "formatted_phone_number": "string",
+//   x "geometry": "object",
+//   x "hasVerified": "boolean",
+//   x "international_phone_number": "string",
+//   x "linkingId": "string",
+//   x "name": "string",
+//   x "opening_hours": "object",
+//   x "photos": "object",
+//   x "rating": "number",
+//   x "reviews": "object",
+//   x "state": "string",
+//   x "types": "object",
+//   "website": "string",
+// }
+
 // Photo (multiple?)
 // Opening hours
 // FavoriteCounts
