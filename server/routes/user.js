@@ -19,9 +19,52 @@ userTestRouter.post("/auth", async (req, res) => {
   }
   return res.send(false);
 });
+userTestRouter.post("/db/localBusinesses", async (req, res) => {
+  try {
+    console.log("correct spot being hit");
+    const businesses = await Business.find();
+    let directory = {};
+    for (var i = 0; i < businesses.length; i++) {
+      if (businesses[i].zip !== undefined) {
+        let first = businesses[i].zip;
+        if (first.length === 5) {
+          if (directory[first] === undefined) {
+            directory[first] = [businesses[i]];
+          } else {
+            directory[first].push(businesses[i]);
+          }
+        }
+      }
+    }
+    let returnArray = [];
+    const zips = req.body.array;
+
+    for (var i = 0; i < zips.length; i++) {
+      if (directory[zips[i]] !== undefined && directory[zips[i]].length > 0) {
+        for (var j = 0; j < directory[zips[i]].length; j++) {
+          returnArray.push(directory[zips[i]][j]);
+        }
+      }
+    }
+
+    res.send(returnArray);
+  } catch (error) {}
+});
+userTestRouter.post("/db/localBusinesses/correctZip", async (req, res) => {
+  try {
+    const { zip, id } = req.body;
+
+    const fixed = await Business.update(
+      { _id: id },
+      {
+        $set: { zip: zip },
+      }
+    );
+    res.send(fixed);
+  } catch (error) {}
+});
 userTestRouter.post("/testModel", async (req, res) => {
   try {
-    console.log("OW!");
     const addBusiness = await new Business(req.body);
     addBusiness.save();
     res.send(addBusiness);

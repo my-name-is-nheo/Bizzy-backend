@@ -18,6 +18,7 @@ const businessSchema = new mongoose.Schema({
   city: { type: String, minlength: 1, maxlength: 5000 },
   international_phone_number: { type: String },
   online: { type: Boolean },
+  zip: { type: String },
   ownerName: { type: String },
   hasVerified: { type: Boolean },
   state: { type: String },
