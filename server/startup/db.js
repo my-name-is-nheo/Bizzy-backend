@@ -11,7 +11,8 @@ const dbStartUp = () => {
     db.hostname +
     "/" +
     db.schema;
-  mongoose.connect(connString, ).then(() => {
+  console.log(connString, "THIS IS THE CONN STRING");
+  mongoose.connect(connString).then(() => {
     winston.info(`Connected to ${connString}...`);
   });
 };

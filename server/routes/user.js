@@ -4,6 +4,7 @@ const userTestRouter = express.Router();
 const bcrypt = require("bcrypt");
 const _ = require("lodash");
 const { Business } = require("../model/business");
+const { update } = require("lodash");
 
 userTestRouter.get("/ip", async (req, res) => {
   //working
@@ -48,6 +49,34 @@ userTestRouter.post("/db/localBusinesses", async (req, res) => {
     }
 
     res.send(returnArray);
+  } catch (error) {}
+});
+userTestRouter.get("/db/localBusinesses", async (req, res) => {
+  try {
+    console.log("correct spot being hit");
+    const businesses = await Business.find();
+
+    res.send(businesses);
+  } catch (error) {}
+});
+userTestRouter.post("/db/localBusinesses/addresses", async (req, res) => {
+  try {
+    const business = await Business.find();
+    for (var i = 0; i < business.length; i++) {
+      if (req.body.linkingId === business[i].linkingId) {
+        console.log(typeof req.body.countryCode, typeof req.body.line1);
+        await Business.update(
+          { _id: business[i]._id },
+          {
+            $set: {
+              countryCode: req.body.countryCode,
+              lineOne: req.body.line1,
+            },
+          }
+        );
+      }
+    }
+    res.send("completed");
   } catch (error) {}
 });
 userTestRouter.post("/db/localBusinesses/correctZip", async (req, res) => {

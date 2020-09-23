@@ -18,6 +18,7 @@ loginRouter.get("/", async (req, res) => {
 //============================================================
 loginRouter.post("/", async (req, res) => {
   try {
+    console.log("hitting the right space, g boy");
     const valid = validateUser(req.body);
     if (valid.error) {
       console.log(valid.error.details[0].message);
@@ -47,7 +48,6 @@ loginRouter.post("/", async (req, res) => {
       await banned.save();
       return res.send(banned);
     }
-    console.log(" This dat sexii bodii 123");
     const id = ipObject[0]._id;
 
     for (var key in ipObject[0].ips) {
@@ -67,6 +67,7 @@ loginRouter.post("/", async (req, res) => {
             }
           );
         } else {
+          console.log("you got past the ban");
           const presentTime = new Date(Date.now());
           const purgedCollection = [];
           for (var index = 0; index < ipObject[0].ips[key].length; index++) {
@@ -135,12 +136,14 @@ loginRouter.post("/", async (req, res) => {
     const userDetails = await NewUser.findOne({ email: req.body.email });
 
     const login = new TokenMaker({
+      _id: userDetails._id,
       email: req.body.email,
       password: req.body.password,
       firstName: userDetails.firstName,
       lastName: userDetails.lastName,
     });
     const token = login.generateAuthToken();
+    console.log(token);
     res.header("x-auth-token", token).send("x auth token sent!");
   } catch (err) {
     console.log(err, "post request not working");
